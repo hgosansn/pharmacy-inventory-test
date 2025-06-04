@@ -1,89 +1,95 @@
+const CONFIG_FILE_PATH = "./drugUpdateConfigs.json";
 const MAX_BENEFIT = 50;
+
 const limitBenefit = (benefit) => Math.max(0, Math.min(MAX_BENEFIT, benefit));
-const decrementExpiresIn = (expiresIn) => expiresIn - 1;
 
-export class DrugUpdateStrategy {
-  update(drug) {
-    throw new Error(`${drug.name} update method must be implemented!`);
+/**
+ * Load drug update configurations from a JSON file.
+ */
+export async function loadDrugUpdateConfigs() {
+  let defaultDrugUpdateConfigs;
+  try {
+    defaultDrugUpdateConfigs = await import(CONFIG_FILE_PATH, {
+      assert: { type: "json" },
+    }).then((m) => m.default);
+  } catch {
+    defaultDrugUpdateConfigs = {};
+  }
+  return defaultDrugUpdateConfigs;
+}
+
+/**
+ * Parser/interpreter for string-based rules
+ * Parses conditions like "expiresIn < 0", "benefit >= 10"
+ */
+class DrugStrategyParser {
+  static evalCondition(condition, drug) {
+    if (condition === "true") {
+      return true;
+    }
+    const condRegex =
+      /^(expiresIn|benefit)\s*(==|!=|===|!==|<=|>=|<|>)\s*(-?\d+)$/;
+    const match = condition.match(condRegex);
+    if (!match) {
+      return false;
+    }
+    const [, prop, op, value] = match;
+    const left = Number(drug[prop]);
+    const right = Number(value);
+    switch (op) {
+      case "==": {
+        return left == right;
+      }
+      case "!=": {
+        return left != right;
+      }
+      case "<": {
+        return left < right;
+      }
+      case ">": {
+        return left > right;
+      }
+      case "<=": {
+        return left <= right;
+      }
+      case ">=": {
+        return left >= right;
+      }
+      default: {
+        return false;
+      }
+    }
   }
 }
 
-export class DefaultDrugStrategy extends DrugUpdateStrategy {
-  update(drug) {
-    const expiresIn = decrementExpiresIn(drug.expiresIn);
+export class ConfigBasedDrugUpdater {
+  constructor(configs) {
+    this.configs = configs;
+  }
+
+  updateDrug(drug) {
+    const config = this.configs[drug.name] || this.configs["Default"];
+    let expiresIn = drug.expiresIn + Number(config.expiresIn.change || 0);
     let benefit = drug.benefit;
-    if (benefit > 0) {
-      benefit -= 1;
-    }
-    if (expiresIn < 0) {
-      benefit -= 1;
-    }
-    return { ...drug, expiresIn, benefit: limitBenefit(benefit) };
-  }
-}
-
-export class HerbalTeaStrategy extends DrugUpdateStrategy {
-  update(drug) {
-    const expiresIn = decrementExpiresIn(drug.expiresIn);
-    let benefit = drug.benefit + 1;
-    if (expiresIn < 0) {
-      benefit += 1;
-    }
-    return { ...drug, expiresIn, benefit: limitBenefit(benefit) };
-  }
-}
-
-export class FervexStrategy extends DrugUpdateStrategy {
-  update(drug) {
-    const expiresIn = decrementExpiresIn(drug.expiresIn);
-    let benefit = drug.benefit + 1;
-    if (drug.expiresIn < 11) {
-      benefit += 1;
-    }
-    if (drug.expiresIn < 6) {
-      benefit += 1;
-    }
-    if (expiresIn < 0) {
-      benefit = 0;
-    }
-    return { ...drug, expiresIn, benefit: limitBenefit(benefit) };
-  }
-}
-
-export class MagicPillStrategy extends DrugUpdateStrategy {
-  update(drug) {
-    // Magic Pill does not change.
-    return { ...drug };
-  }
-}
-
-export class DafalganStrategy extends DrugUpdateStrategy {
-  update(drug) {
-    const expiresIn = decrementExpiresIn(drug.expiresIn);
-    let benefit = drug.benefit;
-    if (benefit > 0) {
-      benefit -= 2;
-    }
-    if (expiresIn < 0) {
-      benefit -= 2;
+    for (const rule of config.benefit) {
+      if (DrugStrategyParser.evalCondition(rule.when, { ...drug, expiresIn })) {
+        if (rule.set !== undefined) {
+          benefit = Number(rule.set);
+          break;
+        } else if (rule.change !== undefined) {
+          benefit += Number(rule.change);
+        }
+      }
     }
     return { ...drug, expiresIn, benefit: limitBenefit(benefit) };
   }
 }
 
 export class StrategyFactory {
-  static getStrategy(drug) {
-    switch (drug.name) {
-      case "Herbal Tea":
-        return new HerbalTeaStrategy();
-      case "Fervex":
-        return new FervexStrategy();
-      case "Magic Pill":
-        return new MagicPillStrategy();
-      case "Dafalgan":
-        return new DafalganStrategy();
-      default:
-        return new DefaultDrugStrategy();
-    }
+  static getStrategies(configs) {
+    const updater = new ConfigBasedDrugUpdater(configs);
+    return {
+      update: (drug) => updater.updateDrug(drug),
+    };
   }
 }

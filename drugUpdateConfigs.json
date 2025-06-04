@@ -1,0 +1,36 @@
+{
+  "Default": {
+    "expiresIn": { "change": "-1" },
+    "benefit": [
+      { "when": "true", "change": "-1" },
+      { "when": "expiresIn < 0", "change": "-1" }
+    ]
+  },
+  "Herbal Tea": {
+    "expiresIn": { "change": "-1" },
+    "benefit": [
+      { "when": "true", "change": "1" },
+      { "when": "expiresIn < 0", "change": "1" }
+    ]
+  },
+  "Fervex": {
+    "expiresIn": { "change": "-1" },
+    "benefit": [
+      { "when": "true", "change": "1" },
+      { "when": "expiresIn < 11", "change": "1" },
+      { "when": "expiresIn < 6", "change": "1" },
+      { "when": "expiresIn <= 0", "set": "0" }
+    ]
+  },
+  "Magic Pill": {
+    "expiresIn": { "change": "0" },
+    "benefit": []
+  },
+  "Dafalgan": {
+    "expiresIn": { "change": "-1" },
+    "benefit": [
+      { "when": "benefit > 0", "change": "-2" },
+      { "when": "expiresIn < 0", "change": "-2" }
+    ]
+  }
+}
