@@ -1,6 +1,8 @@
-# Take-Home Test Specification
+# Pharmacy System
 
-[➡️ See Project Specifics](./PROJECT_SPECIFICS.md)
+* [Check solution specifics details here](./PROJECT_SPECIFICS.md)
+
+* [To add new drugs types see](./automation/README.md)
 
 You are a new developer in the team, and your first job is to add a feature to an old existing piece of code.
 
