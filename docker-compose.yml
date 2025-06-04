@@ -1,7 +1,8 @@
 version: "3"
 services:
   pharmacy:
-    build: .
+    build:
+      context: .
     volumes:
-      - ".:/usr/src"
+      - .:/usr/src:Z
       - /usr/src/node_modules
