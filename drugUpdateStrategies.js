@@ -56,6 +56,21 @@ export class MagicPillStrategy extends DrugUpdateStrategy {
   }
 }
 
+export class DafalganStrategy extends DrugUpdateStrategy {
+  update(drug) {
+    if (drug.benefit > 0) {
+      drug.benefit = drug.benefit - 2;
+      if (drug.benefit < 0) drug.benefit = 0;
+    }
+    drug.expiresIn = drug.expiresIn - 1;
+    if (drug.expiresIn < 0 && drug.benefit > 0) {
+      drug.benefit = drug.benefit - 2;
+      if (drug.benefit < 0) drug.benefit = 0;
+    }
+    return drug;
+  }
+}
+
 export class StrategyFactory {
   static getStrategy(drug) {
     switch (drug.name) {
@@ -65,6 +80,8 @@ export class StrategyFactory {
         return new FervexStrategy();
       case "Magic Pill":
         return new MagicPillStrategy();
+      case "Dafalgan":
+        return new DafalganStrategy();
       default:
         return new DefaultDrugStrategy();
     }

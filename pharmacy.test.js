@@ -140,4 +140,38 @@ describe("Pharmacy", () => {
       new Drug("Magic Pill", 10, 10),
     ]);
   });
+
+  it("should not decrease benefit below 0 for Dafalgan even when expired", () => {
+    expect(
+      new Pharmacy([new Drug("Dafalgan", 0, 3)]).updateBenefitValue(),
+    ).toEqual([new Drug("Dafalgan", -1, 0)]);
+  });
+
+  it("should keep Dafalgan at 0 benefit when already at 0", () => {
+    expect(
+      new Pharmacy([new Drug("Dafalgan", 5, 0)]).updateBenefitValue(),
+    ).toEqual([new Drug("Dafalgan", 4, 0)]);
+  });
+
+  it("should decrease Dafalgan's benefit correctly when benefit is odd", () => {
+    expect(
+      new Pharmacy([new Drug("Dafalgan", 3, 9)]).updateBenefitValue(),
+    ).toEqual([new Drug("Dafalgan", 2, 7)]);
+  });
+
+  it("should handle Dafalgan over multiple days correctly", () => {
+    let pharmacy = new Pharmacy([new Drug("Dafalgan", 2, 10)]);
+    // Day 1
+    pharmacy.drugs = pharmacy.updateBenefitValue();
+    expect(pharmacy.drugs).toEqual([new Drug("Dafalgan", 1, 8)]);
+    // Day 2
+    pharmacy.drugs = pharmacy.updateBenefitValue();
+    expect(pharmacy.drugs).toEqual([new Drug("Dafalgan", 0, 6)]);
+    // Day 3 (expired)
+    pharmacy.drugs = pharmacy.updateBenefitValue();
+    expect(pharmacy.drugs).toEqual([new Drug("Dafalgan", -1, 2)]);
+    // Day 4 (expired)
+    pharmacy.drugs = pharmacy.updateBenefitValue();
+    expect(pharmacy.drugs).toEqual([new Drug("Dafalgan", -2, 0)]);
+  });
 });
