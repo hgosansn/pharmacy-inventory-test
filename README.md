@@ -1,5 +1,7 @@
 # Take-Home Test Specification
 
+[➡️ See Project Specifics](./PROJECT_SPECIFICS.md)
+
 You are a new developer in the team, and your first job is to add a feature to an old existing piece of code.
 
 ## System specifications
