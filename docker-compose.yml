@@ -1,6 +1,6 @@
 version: "3"
 services:
-  inato:
+  pharmacy:
     build: .
     volumes:
       - ".:/usr/src"
